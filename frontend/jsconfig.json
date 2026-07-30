@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "jsx": "preserve",
+    "module": "esnext",
+    "target": "esnext"
+  },
+  "exclude": ["node_modules"],
+}

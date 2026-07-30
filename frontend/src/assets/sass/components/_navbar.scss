@@ -1,0 +1,29 @@
+.navbar {
+  @apply  top-0 left-0 w-full bg-grey flex justify-between lg:justify-center items-center z-50;
+  ul {
+    @apply px-[4rem] relative flex justify-end flex-grow list-none;
+    li {
+      @apply text-white font-semibold p-4 cursor-pointer;
+      a {
+        @apply no-underline text-white;
+      }
+    }
+  }
+  .ant-menu-overflow {
+    .ant-menu-item:hover::after,
+    .ant-menu-item-selected::after,
+    .ant-menu-submenu-title::after {
+      @apply text-primary border-b-primary #{!important};
+    }
+    .ant-menu-item:hover,
+    .ant-menu-item-selected {
+      @apply text-primary #{!important};
+    }
+    .ant-menu-submenu.ant-menu-submenu-active::after {
+      @apply text-primary border-b-primary #{!important};
+    }
+  }
+  .ant-menu-horizontal{
+    @apply border-b-0 #{!important}
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "id": "/?utm_source=pwa",
+  "name": "AIEMS - Ankur Institute of Engineering and Management Studies",
+  "short_name": "AIEMS",
+  "description": "Empowering students through industry-driven technical education in BSc. CSIT under Rajarshi Janak University (RJU) affiliation in Bardibas, Nepal.",
+  "start_url": "/home?utm_source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#009444",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": [
+    "education",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-2-name.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "BSc. CSIT Admissions",
+      "short_name": "Admissions",
+      "description": "Enroll in RJU affiliated BSc. CSIT at AIEMS Bardibas",
+      "url": "/apply-now?utm_source=pwa",
+      "icons": [
+        {
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Contact Admissions Desk",
+      "short_name": "Contact",
+      "description": "Get in touch with AIEMS in Bardibas",
+      "url": "/contact-us?utm_source=pwa",
+      "icons": [
+        {
+          "src": "/logo.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

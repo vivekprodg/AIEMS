@@ -1,0 +1,49 @@
+.banner-bottom-section {
+  @apply p-2;
+  .pops {
+    @apply cursor-pointer h-32 w-56 hover:scale-[1.2] flex gap-3 font-semibold text-center items-center text-white text-lg justify-center transition-transform duration-300;
+    &:first-child {
+      @apply hover:bg-[#b5cf64];
+      svg {
+        @apply text-[#b5cf64] font-bold w-4;
+      }
+    }
+
+    &:nth-child(2) {
+      @apply hover:bg-[#f9cc3b];
+      svg {
+        @apply text-[#f9cc3b] font-bold w-4;
+      }
+    }
+
+    &:nth-child(3) {
+      @apply hover:bg-[#429bd5];
+      svg {
+        @apply text-[#429bd5] font-bold w-4;
+      }
+    }
+    &:nth-child(4) {
+      @apply hover:bg-[#d3524a];
+      svg {
+        @apply text-[#d3524a] font-bold w-4;
+      }
+    }
+
+    // #f9cc3b #429bd5 #d3524a #a246ff
+    &:hover svg {
+      @apply text-white; /* Change SVG color to white on hover */
+    }
+    &:not(:last-child) {
+      @apply border-0 border-solid border-r-[1px] border-white;
+    }
+  }
+}
+.facilities {
+  .ant-carousel {
+    .slick-arrow {
+      inset-inline-end: -20px;
+
+      @apply text-primary rounded-full #{!important}
+    }
+  }
+}
