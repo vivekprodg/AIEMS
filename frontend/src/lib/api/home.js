@@ -62,7 +62,7 @@ export function resolveMediaUrl(url) {
 
 /**
  * Validates and normalizes raw homepage CMS payloads.
- * Strictly dynamic with isolated homepage showcase support and null safety.
+ * Strictly dynamic with isolated homepage showcase support, popup banner, and null safety.
  */
 export function normalizeHomeContent(data) {
   if (!data || typeof data !== "object") {
@@ -70,6 +70,7 @@ export function normalizeHomeContent(data) {
       site_settings: { navbar_links: [] },
       announcements: [],
       eligibility_config: {},
+      popup_banner: {},
       top_banners: { technical_tags: [], landing_stats: [] },
       about_banners: {},
       programs: { items: [], isolated_showcase_cards: [] },
@@ -90,6 +91,15 @@ export function normalizeHomeContent(data) {
       ...apiSettings,
       logo: apiSettings.logo ? resolveMediaUrl(apiSettings.logo) : null,
       navbar_links: Array.isArray(apiSettings.navbar_links) ? apiSettings.navbar_links : [],
+    };
+  }
+
+  let processedPopupBanner = {};
+  if (data.popup_banner && typeof data.popup_banner === "object" && Object.keys(data.popup_banner).length > 0) {
+    const apiPopup = data.popup_banner;
+    processedPopupBanner = {
+      ...apiPopup,
+      image: apiPopup.image ? resolveMediaUrl(apiPopup.image) : null,
     };
   }
 
@@ -202,6 +212,7 @@ export function normalizeHomeContent(data) {
     site_settings: processedSiteSettings,
     announcements: Array.isArray(data.announcements) ? data.announcements : [],
     eligibility_config: data.eligibility_config || {},
+    popup_banner: processedPopupBanner,
     top_banners: processedTopBanners,
     about_banners: processedAboutBanners,
     programs: processedPrograms,

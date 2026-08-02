@@ -9,32 +9,25 @@ from .models import (
     ProgramEntryRequirementItem,
     CourseDetail,
     CourseDetailChild,
+    CourseDetailChildElectiveOption,
     ProgramIndustryCertification,
     CareerOutcomes,
     CareerOutcomeChild,
     ProgramBannerImage,
 )
 
-# ==============================================================================
-# BASE CMS SERIALIZER WITH SANITIZATION & MEDIA URL RESOLUTION
-# ==============================================================================
+
 class BaseCMSSerializer(serializers.ModelSerializer):
-    """
-    Base serializer that enforces persistent XSS sanitization across all string fields
-    and resolves absolute media URIs for file assets.
-    """
     def to_representation(self, instance):
         ret = super().to_representation(instance)
         request = self.context.get('request')
 
-        # Resolve media fields to absolute URLs
         for field_name, field in self.fields.items():
             if isinstance(field, (serializers.ImageField, serializers.FileField)):
                 file_value = getattr(instance, field_name, None)
                 if file_value:
                     ret[field_name] = get_absolute_media_url(request, file_value)
 
-        # Sanitize string output values
         for key, value in ret.items():
             if isinstance(value, str):
                 ret[key] = sanitize_string(value)
@@ -42,9 +35,6 @@ class BaseCMSSerializer(serializers.ModelSerializer):
         return ret
 
 
-# ==============================================================================
-# PROGRAM SUB-ENTITY SERIALIZERS
-# ==============================================================================
 class ProgramBannerImageSerializer(BaseCMSSerializer):
     class Meta:
         model = ProgramBannerImage
@@ -89,13 +79,28 @@ class ProgramEntryRequirementSerializer(BaseCMSSerializer):
         fields = ["id", "title", "icon", "icon_class", "content", "items"]
 
 
+class CourseDetailChildElectiveOptionSerializer(BaseCMSSerializer):
+    class Meta:
+        model = CourseDetailChildElectiveOption
+        fields = [
+            "id", "course_name", "course_code", "credit_hours",
+            "description", "display_order"
+        ]
+
+
 class CourseDetailChildSerializer(BaseCMSSerializer):
+    elective_options = serializers.SerializerMethodField()
+
     class Meta:
         model = CourseDetailChild
         fields = [
             "id", "course_name", "course_code", "credit_hours",
-            "course_type", "is_elective", "description", "display_order"
+            "course_type", "is_elective", "description", "elective_options", "display_order"
         ]
+
+    def get_elective_options(self, obj):
+        ordered_options = obj.elective_options.all().order_by('display_order', 'id')
+        return CourseDetailChildElectiveOptionSerializer(ordered_options, many=True, context=self.context).data
 
 
 class CourseDetailSerializer(BaseCMSSerializer):
@@ -140,9 +145,6 @@ class CareerOutcomesSerializer(BaseCMSSerializer):
         return CareerOutcomeChildSerializer(ordered_outcomes, many=True, context=self.context).data
 
 
-# ==============================================================================
-# MAIN PROGRAM DETAIL SERIALIZER
-# ==============================================================================
 class ProgramSerializer(BaseCMSSerializer):
     program_title = serializers.SerializerMethodField()
     program_banner = serializers.SerializerMethodField()

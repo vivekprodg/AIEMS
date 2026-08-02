@@ -112,7 +112,6 @@ class AboutProgram(models.Model):
     content = models.TextField(default="", verbose_name="Primary Narrative Paragraph")
     content_paragraph_2 = models.TextField(default="", blank=True, verbose_name="Secondary Narrative Paragraph")
 
-    # Dynamic Affiliation Overlay Badge
     charter_badge_tag = models.CharField(
         max_length=100,
         default="",
@@ -280,7 +279,11 @@ class CourseDetailChild(models.Model):
     )
     course_name = models.CharField(max_length=255, verbose_name="Course Name")
     course_code = models.CharField(max_length=50, verbose_name="Course Code (e.g. CSC109)")
-    credit_hours = models.PositiveIntegerField(default=3, verbose_name="Credit Hours")
+    credit_hours = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Credit Hours (Optional)"
+    )
     course_type = models.CharField(
         max_length=100,
         blank=True,
@@ -299,6 +302,33 @@ class CourseDetailChild(models.Model):
     class Meta:
         verbose_name = "Curriculum Subject Item"
         verbose_name_plural = "Curriculum Subject Items"
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return f"{self.course_code} - {self.course_name}"
+
+
+class CourseDetailChildElectiveOption(models.Model):
+    course_detail_child = models.ForeignKey(
+        CourseDetailChild,
+        related_name="elective_options",
+        on_delete=models.CASCADE,
+        verbose_name="Parent Elective Subject"
+    )
+    course_name = models.CharField(max_length=255, verbose_name="Elective Course Name")
+    course_code = models.CharField(max_length=50, verbose_name="Elective Course Code (e.g. SCIT 421)")
+    credit_hours = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        verbose_name="Credit Hours (Optional)"
+    )
+    description = models.TextField(blank=True, default="", verbose_name="Elective Course Description")
+    display_order = models.PositiveIntegerField(default=0, verbose_name="Display Order")
+    created_at = models.DateTimeField(default=now, verbose_name="Created At")
+
+    class Meta:
+        verbose_name = "Elective Course Option"
+        verbose_name_plural = "Elective Course Options"
         ordering = ['display_order', 'id']
 
     def __str__(self):

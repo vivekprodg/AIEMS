@@ -13,6 +13,7 @@ from .models import (
     ProgramEntryRequirementItem,
     CourseDetail,
     CourseDetailChild,
+    CourseDetailChildElectiveOption,
     ProgramIndustryCertification,
     CareerOutcomes,
     CareerOutcomeChild,
@@ -20,18 +21,13 @@ from .models import (
 
 
 def clear_program_cms_caches():
-    """
-    Clears all active CMS payload caches (Home, About, and Program Details) upon administrative changes.
-    """
     try:
-        cache.clear()  # Flushes all cached payloads immediately
+        cache.clear()
     except Exception:
         pass
 
+
 class ImagePreviewMixin:
-    """
-    Administrative utility for rendering secure media thumbnail reviews inside list and detail views.
-    """
     def _render_thumbnail(self, image_field, height=40):
         if image_field:
             try:
@@ -62,9 +58,6 @@ class ImagePreviewMixin:
         return mark_safe('<span style="color: #a0aec0; font-style: italic;">No asset uploaded.</span>')
 
 
-# ==============================================================================
-# NESTED INLINE ADMIN CLASSES
-# ==============================================================================
 class ProgramBannerImageInline(ImagePreviewMixin, nested_admin.NestedTabularInline):
     model = ProgramBannerImage
     extra = 1
@@ -133,9 +126,16 @@ class ProgramEntryRequirementInline(ImagePreviewMixin, nested_admin.NestedStacke
     icon_preview.short_description = "Icon Preview"
 
 
-class CourseDetailChildInline(nested_admin.NestedTabularInline):
+class CourseDetailChildElectiveOptionInline(nested_admin.NestedTabularInline):
+    model = CourseDetailChildElectiveOption
+    extra = 3
+    fields = ('course_code', 'course_name', 'credit_hours', 'description', 'display_order')
+
+
+class CourseDetailChildInline(nested_admin.NestedStackedInline):
     model = CourseDetailChild
     extra = 4
+    inlines = [CourseDetailChildElectiveOptionInline]
     fields = (
         'course_name', 'course_code', 'credit_hours',
         'course_type', 'is_elective', 'description', 'display_order'
@@ -169,9 +169,6 @@ class CareerOutcomesInline(nested_admin.NestedStackedInline):
     fields = ('title', 'content')
 
 
-# ==============================================================================
-# MAIN MODEL ADMIN REGISTRATIONS
-# ==============================================================================
 @admin.register(Program)
 class ProgramAdmin(nested_admin.NestedModelAdmin):
     inlines = [

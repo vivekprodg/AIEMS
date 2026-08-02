@@ -10,6 +10,7 @@ from .models import (
     AnnouncementTickerItem,
     EligibilityCalculatorConfig,
     EligibilityStreamOption,
+    HomepagePopupBanner,
     ApplyForCourseBanner,
     ApplyForPositionBanner,
     TopBanner,
@@ -189,6 +190,25 @@ class EligibilityCalculatorConfigSerializer(serializers.ModelSerializer):
             return []
         options = obj.stream_options.all().order_by('display_order', 'id')
         return EligibilityStreamOptionSerializer(options, many=True, context=self.context).data
+
+
+class HomepagePopupBannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomepagePopupBanner
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        request = self.context.get('request')
+
+        if 'image' in ret and instance.image:
+            ret['image'] = get_absolute_media_url(request, instance.image)
+
+        for key in ['heading', 'sub_heading', 'button_text', 'action_url']:
+            if isinstance(ret.get(key), str):
+                ret[key] = sanitize_string(ret[key])
+
+        return ret
 
 # ==============================================================================
 # STANDARD SYSTEM & HERO TAGS/STATS SERIALIZERS

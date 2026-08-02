@@ -6,7 +6,7 @@ import nested_admin
 
 from .models import (
     SiteGlobalSettings, NavbarLink, AnnouncementTickerItem, EligibilityCalculatorConfig,
-    EligibilityStreamOption, TopBanner, HeroTechnicalTag, LandingStat, AboutBannerTitle, AboutBanner,
+    EligibilityStreamOption, HomepagePopupBanner, TopBanner, HeroTechnicalTag, LandingStat, AboutBannerTitle, AboutBanner,
     ProgramTitle, Program,
     IsolatedHomeShowcaseCard, IsolatedHomeShowcaseSummaryPoint, IsolatedHomeShowcaseFeature, IsolatedHomeShowcaseRequirementRule,
     CampusTitle, CampusFacility, NewsTitle, NewsEvent, AdmissionContactDetail,
@@ -171,6 +171,52 @@ class EligibilityCalculatorConfigAdmin(SingletonAdminMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('stream_options')
+
+
+@admin.register(HomepagePopupBanner)
+class HomepagePopupBannerAdmin(EducationAdminMixin, admin.ModelAdmin):
+    list_display = (
+        'heading', 'popup_thumbnail', 'action_url',
+        'display_order', 'is_active', 'start_date', 'end_date', 'created_at'
+    )
+    list_editable = ('display_order', 'is_active')
+    list_filter = ('is_active', 'created_at', 'start_date', 'end_date')
+    search_fields = ('heading', 'sub_heading', 'action_url', 'button_text')
+    readonly_fields = ('created_at', 'image_detail_preview')
+    ordering = ('display_order', '-created_at')
+
+    fieldsets = (
+        ('Popup Banner Identification & Copy', {
+            'fields': ('heading', 'sub_heading')
+        }),
+        ('Banner Image Asset (Flexible Size & Aspect Ratio)', {
+            'fields': ('image', 'image_detail_preview'),
+            'description': 'Upload any JPEG, JPG, PNG, WEBP, or SVG flyer or poster. The frontend automatically fits and scales the banner cleanly on any screen.'
+        }),
+        ('Click-through CTA & Link', {
+            'fields': ('show_cta_button', 'button_text', 'action_url')
+        }),
+        ('Schedule & Visibility Control', {
+            'fields': ('is_active', 'display_order', 'start_date', 'end_date')
+        }),
+        SEO_FIELDSET,
+    )
+
+    def popup_thumbnail(self, obj):
+        return self._render_thumbnail(obj.image, height=45)
+    popup_thumbnail.short_description = "Flyer Thumbnail"
+
+    def image_detail_preview(self, obj):
+        return self._render_detail_preview(obj.image, height=140)
+    image_detail_preview.short_description = "Popup Image Preview"
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        clear_all_cms_caches()
+
+    def delete_model(self, request, obj):
+        super().delete_model(request, obj)
+        clear_all_cms_caches()
 
 # ==============================================================================
 # 2. CORE LANDING BANNER & CMS PRESENTATION ADMINS
@@ -619,7 +665,7 @@ class PositionAdmin(admin.ModelAdmin):
 
 
 @admin.register(ApplyPosition)
-class ApplyPositionAdmin(admin.ModelAdmin):
+class ApplyPositionAdmin(EducationAdminMixin, admin.ModelAdmin):
     list_display = ('name', 'gender', 'email', 'contact', 'position', 'resume_download_shortcut', 'created_at')
     list_filter = ('gender', 'position', 'created_at')
     search_fields = ('name', 'email', 'contact', 'message')
@@ -821,21 +867,9 @@ class DynamicPageContentAdmin(admin.ModelAdmin):
 # ==============================================================================
 # 12. DYNAMIC NOTIFICATION & SMTP CONFIGURATION ADMIN
 # ==============================================================================
-# ==============================================================================
-# ENHANCEMENT 1 (admin.py):
-# Custom ModelForm that auto-generates a warning banner shown to admins
-# whenever (a) no email_logo is uploaded, or (b) a previously-uploaded SVG
-# is still in place despite the new raster-only restriction.
-# This is purely UX — no functional change, just clearer admin feedback.
-# ==============================================================================
 def _detect_email_logo_issue(instance):
-    """
-    Returns a mark_safe-formatted warning HTML string if there's a known
-    issue with the email logo configuration. Returns empty string if all OK.
-    """
     warnings = []
 
-    # Check 1: No email_logo at all
     if not instance.email_logo:
         warnings.append(
             "<strong>No email logo configured.</strong> Outgoing emails will fall back to the "
@@ -843,10 +877,6 @@ def _detect_email_logo_issue(instance):
             "Upload a dedicated PNG/JPG here for the most reliable email rendering."
         )
 
-    # Check 2: Previously uploaded file is SVG (still present in storage
-    # from before the raster-only restriction was applied). The new
-    # validator blocks new SVG uploads but cannot retroactively remove
-    # existing ones — admins must re-upload as PNG.
     if instance.email_logo and instance.email_logo.name:
         filename_lc = instance.email_logo.name.lower()
         if filename_lc.endswith('.svg'):
@@ -883,12 +913,6 @@ class NotificationSettingForm(forms.ModelForm):
         model = NotificationSetting
         fields = '__all__'
 
-        # ENHANCEMENT 2 (admin.py):
-        # Add a clear helper_text override on the email_logo form field
-        # so admin users immediately understand the raster-only requirement,
-        # the reason, and the recommended format/dimensions. Django's
-        # built-in `email_logo` form field still inherits the
-        # validate_email_image_file validator from models.py automatically.
         help_texts = {
             'email_logo': (
                 "Upload a RASTER image (JPG, JPEG, PNG, or WEBP only — SVG is rejected). "
@@ -918,9 +942,6 @@ class NotificationSettingAdmin(EducationAdminMixin, SingletonAdminMixin, admin.M
                 'email_logo', 'email_logo_preview',
                 'email_header_bg_color', 'email_footer_text', 'email_footer_address'
             ),
-            # ENHANCEMENT 3 (admin.py):
-            # Fieldset description updated to inform admins upfront WHY only
-            # raster formats work, before they even try to upload an SVG.
             'description': (
                 "Upload a RASTER logo (PNG/JPG/JPEG/WEBP) specifically formatted for email headers. "
                 "SVG is NOT supported because most email clients (Gmail web, Outlook desktop) "
@@ -929,7 +950,7 @@ class NotificationSettingAdmin(EducationAdminMixin, SingletonAdminMixin, admin.M
                 "as automatic fallbacks if this dedicated email logo is not provided."
             )
         }),
-        ('Provider & SMTP Server Settings', {
+        ('Provider & Network Settings', {
             'fields': ('provider', 'smtp_host', 'smtp_port', 'encryption', 'timeout')
         }),
         ('Authentication Credentials', {
@@ -972,10 +993,5 @@ class NotificationSettingAdmin(EducationAdminMixin, SingletonAdminMixin, admin.M
     email_logo_preview.short_description = "Email Logo Preview"
 
     def email_logo_warning_banner(self, obj):
-        """
-        Inline warning banner ABOVE the email_logo field that highlights
-        raster requirement violations or missing logo configurations.
-        Pure UX enhancement — no functional change to email rendering logic.
-        """
         return _detect_email_logo_issue(obj)
     email_logo_warning_banner.short_description = "Configuration Health Check"

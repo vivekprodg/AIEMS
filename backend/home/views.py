@@ -1,5 +1,7 @@
 import logging
 from django.core.cache import cache
+from django.db.models import Q
+from django.utils.timezone import now
 from rest_framework import viewsets, status, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,6 +13,7 @@ from .models import (
     NavbarLink,
     AnnouncementTickerItem,
     EligibilityCalculatorConfig,
+    HomepagePopupBanner,
     ApplyForCourseBanner,
     ApplyForPositionBanner,
     TopBanner,
@@ -48,6 +51,7 @@ from .serializers import (
     NavbarLinkSerializer,
     AnnouncementTickerItemSerializer,
     EligibilityCalculatorConfigSerializer,
+    HomepagePopupBannerSerializer,
     TopBannerSerializer,
     HeroTechnicalTagSerializer,
     LandingStatSerializer,
@@ -238,6 +242,12 @@ class EligibilityCalculatorConfigViewSet(HomepageCacheInvalidationMixin, viewset
     permission_classes = [IsAdminOrReadOnly]
 
 
+class HomepagePopupBannerViewSet(HomepageCacheInvalidationMixin, viewsets.ModelViewSet):
+    queryset = HomepagePopupBanner.objects.filter(is_active=True)
+    serializer_class = HomepagePopupBannerSerializer
+    permission_classes = [IsAdminOrReadOnly]
+
+
 class TopBannerViewSet(HomepageCacheInvalidationMixin, viewsets.ModelViewSet):
     queryset = TopBanner.objects.all().prefetch_related('technical_tags', 'landing_stats')
     serializer_class = TopBannerSerializer
@@ -405,7 +415,7 @@ class DynamicPageContentViewSet(HomepageCacheInvalidationMixin, viewsets.ModelVi
 class ListHomeView(APIView):
     """
     Unified API rendering home layout configuration assets.
-    Exposes 100% dynamic CMS content payload including Isolated Homepage Program Showcase details.
+    Exposes 100% dynamic CMS content payload including Homepage Popup Banner.
     """
     permission_classes = [AllowAny]
 
@@ -422,6 +432,16 @@ class ListHomeView(APIView):
             site_settings = SiteGlobalSettings.objects.prefetch_related('navbar_links').order_by('-created_at').first()
             tickers = AnnouncementTickerItem.objects.filter(is_active=True).order_by('display_order', '-created_at')
             eligibility_config = EligibilityCalculatorConfig.objects.prefetch_related('stream_options').order_by('-created_at').first()
+
+            # Active Popup Banner evaluation with optional start/end date filters
+            now_time = now()
+            popup_banner = HomepagePopupBanner.objects.filter(
+                is_active=True
+            ).filter(
+                Q(start_date__isnull=True) | Q(start_date__lte=now_time)
+            ).filter(
+                Q(end_date__isnull=True) | Q(end_date__gte=now_time)
+            ).order_by('display_order', '-created_at').first()
 
             top_banner = TopBanner.objects.prefetch_related('technical_tags', 'landing_stats').order_by('-created_at').first()
             about_banner_title = AboutBannerTitle.objects.prefetch_related('about_banner_items').order_by('-created_at').first()
@@ -452,6 +472,7 @@ class ListHomeView(APIView):
                 "site_settings": SiteGlobalSettingsSerializer(site_settings, context=serializer_context).data if site_settings else {},
                 "announcements": AnnouncementTickerItemSerializer(tickers, many=True, context=serializer_context).data,
                 "eligibility_config": EligibilityCalculatorConfigSerializer(eligibility_config, context=serializer_context).data if eligibility_config else {},
+                "popup_banner": HomepagePopupBannerSerializer(popup_banner, context=serializer_context).data if popup_banner else {},
                 "top_banners": TopBannerSerializer(top_banner, context=serializer_context).data if top_banner else {},
                 "about_banners": OptimizedAboutBannerTitleSerializer(about_banner_title, context=serializer_context).data if about_banner_title else {},
                 "programs": OptimizedProgramTitleSerializer(program_title, context=serializer_context).data if program_title else {},
@@ -494,7 +515,6 @@ class ContactUsViewSet(viewsets.ModelViewSet):
         instance = serializer.save()
         logger.info(f"New contact inquiry logged. Submission ID: {instance.id}")
 
-        # Trigger dynamic email dispatches asynchronously
         payload = {
             'id': instance.id,
             'name': instance.name,
@@ -519,7 +539,6 @@ class ApplyCourseViewSet(viewsets.ModelViewSet):
 
         program_name = instance.program.heading if instance.program else "BSc. CSIT / Academic Program"
 
-        # Trigger dynamic email dispatches asynchronously
         payload = {
             'id': instance.id,
             'name': instance.name,
@@ -547,7 +566,6 @@ class ApplyPositionViewSet(viewsets.ModelViewSet):
         position_name = instance.position.name if instance.position else "Vacant Position"
         doc_url = get_absolute_media_url(self.request, instance.document) if instance.document else "N/A"
 
-        # Trigger dynamic email dispatches asynchronously
         payload = {
             'id': instance.id,
             'name': instance.name,

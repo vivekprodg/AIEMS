@@ -96,11 +96,6 @@ const renderDynamicIcon = (iconClass, fallback = <FaCode />) => {
   return fallback;
 };
 
-/**
- * HomeContent Component
- * 100% Dynamic CMS-driven layout matching index.html structure.
- * Renders from the TOTALLY ISOLATED Homepage Program Showcase CMS section.
- */
 export default function HomeContent({ content = {} }) {
   const topBanner = content?.top_banners || {};
   const aboutBanner = content?.about_banners || {};
@@ -110,14 +105,32 @@ export default function HomeContent({ content = {} }) {
   const aboutBannerImage = resolveMediaUrl(aboutBanner.image);
 
   const technicalTags = Array.isArray(topBanner.technical_tags) ? topBanner.technical_tags : [];
-  const landingStats = Array.isArray(topBanner.landing_stats) ? topBanner.landing_stats : [];
+  const rawLandingStats = Array.isArray(topBanner.landing_stats) ? topBanner.landing_stats : [];
   const aboutItems = Array.isArray(aboutBanner.items) ? aboutBanner.items : [];
 
-  // Determine if isolated homepage showcase cards are available
   const isolatedCards = Array.isArray(programData.isolated_showcase_cards) ? programData.isolated_showcase_cards : [];
   const standardProgramItems = Array.isArray(programData.items) ? programData.items : [];
   
   const hasIsolatedCards = isolatedCards.length > 0;
+
+  // Exact Copy Fallbacks from index.html
+  const defaultLandingStats = [
+    { id: "fallback-1", prefix: "", target_number: 1, suffix: "st", label: "Pioneer Cohort", sub_label: "Founding CSIT Batch" },
+    { id: "fallback-2", prefix: "", target_number: 100, suffix: "%", label: "Practical Labs", sub_label: "Hands-on technical setup" },
+    { id: "fallback-3", prefix: "", target_number: 10, suffix: "+", label: "Expert Instructors", sub_label: "Experienced CSIT faculty" },
+    { id: "fallback-4", prefix: "TU", target_number: 0, suffix: "", label: "Affiliated Curriculum", sub_label: "Tribhuvan University" }
+  ];
+
+  const landingStats = rawLandingStats.length > 0 ? rawLandingStats : defaultLandingStats;
+
+  // Dynamic Content with Smart Fallbacks matching index.html
+  const heroBadge = topBanner.badge_text || "Inaugural Batch 2026/2027 — Brand New Technical Institute in Bardibas";
+  const heroHeading = topBanner.heading || "Master Computer Science & Information Technology";
+  const heroSubHeading = topBanner.sub_heading || "Join the pioneer batch at Ankur Institute. Offering Tribhuvan University affiliated BSc. CSIT with hands-on software development, database administration, and computer networking.";
+  const primaryBtnText = topBanner.primary_btn_text || "Apply For BSc. CSIT";
+  const primaryBtnUrl = topBanner.primary_btn_url || "#admissions";
+  const secondaryBtnText = topBanner.secondary_btn_text || "Explore Syllabus & Modules";
+  const secondaryBtnUrl = topBanner.secondary_btn_url || "#program";
 
   return (
     <div className="w-full space-y-0">
@@ -125,78 +138,87 @@ export default function HomeContent({ content = {} }) {
       {/* ============================================================================== */}
       {/* 1. HERO SECTION */}
       {/* ============================================================================== */}
-      {topBanner.heading && (
-        <section className="relative min-h-[88vh] flex items-center justify-center bg-secondary overflow-hidden">
-          {heroImage && (
-            <div className="absolute inset-0 z-0">
-              <img
-                src={heroImage}
-                alt={topBanner.heading}
-                className="w-full h-full object-cover object-center select-none"
-              />
-              <div className="absolute inset-0 hero-overlay" aria-hidden="true" />
+      <section className="relative min-h-[75vh] md:min-h-[85vh] flex items-center justify-center bg-secondary overflow-hidden pb-12 sm:pb-16">
+        {heroImage && (
+          <div className="absolute inset-0 z-0">
+            <img
+              src={heroImage}
+              alt={heroHeading}
+              className="w-full h-full object-cover object-center select-none"
+            />
+            <div className="absolute inset-0 hero-overlay" aria-hidden="true" />
+          </div>
+        )}
+
+        {/* Background Gradient Accents */}
+        <div className="absolute top-1/4 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12 sm:pb-16 text-center text-white">
+          
+          {/* Badge */}
+          {heroBadge && (
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-dark text-accent text-xs md:text-sm font-semibold mb-6 border border-accent/30 shadow-lg">
+              <span className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
+              {heroBadge}
             </div>
           )}
 
-          {/* Background Gradient Accents */}
-          <div className="absolute top-1/4 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
+          {/* Main Headline */}
+          <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight max-w-5xl mx-auto">
+            {heroHeading}
+          </h1>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center text-white">
-            
-            <h1 className="font-display font-extrabold text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight tracking-tight max-w-5xl mx-auto">
-              {topBanner.heading}
-            </h1>
+          {/* Sub-headline */}
+          {heroSubHeading && (
+            <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed">
+              {heroSubHeading}
+            </p>
+          )}
 
-            {topBanner.sub_heading && (
-              <p className="mt-6 text-base sm:text-lg md:text-xl text-slate-200 max-w-3xl mx-auto font-normal leading-relaxed">
-                {topBanner.sub_heading}
-              </p>
+          {/* Action CTA Buttons */}
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
+            {primaryBtnText && (
+              <a
+                href={primaryBtnUrl}
+                className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white font-bold text-base px-8 py-4 rounded-xl shadow-glow-primary hover:shadow-primary/60 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <FaPaperPlane /> {primaryBtnText}
+              </a>
             )}
-
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto sm:max-w-none">
-              {topBanner.primary_btn_text && (
-                <a
-                  href={topBanner.primary_btn_url || "#admissions"}
-                  className="w-full sm:w-auto bg-primary hover:bg-primary-hover text-white font-bold text-base px-8 py-4 rounded-xl shadow-glow-primary hover:shadow-primary/60 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center gap-2"
-                >
-                  <FaPaperPlane /> {topBanner.primary_btn_text}
-                </a>
-              )}
-              {topBanner.secondary_btn_text && (
-                <a
-                  href={topBanner.secondary_btn_url || "#program"}
-                  className="w-full sm:w-auto glass-dark hover:bg-white/10 text-white font-semibold text-base px-8 py-4 rounded-xl border border-white/30 hover:border-white transition-all duration-300 flex items-center justify-center gap-2"
-                >
-                  <FaBookOpen /> {topBanner.secondary_btn_text}
-                </a>
-              )}
-            </div>
-
-            {/* Technical Tags Bar */}
-            {technicalTags.length > 0 && (
-              <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-10 border-t border-white/15 text-xs sm:text-sm font-medium text-slate-300">
-                {technicalTags.map((tag, idx) => (
-                  <div key={tag.id || idx} className="flex items-center justify-center gap-2 text-center">
-                    <span className="text-accent text-base shrink-0">
-                      {renderDynamicIcon(tag.icon_class, <FaBuildingColumns />)}
-                    </span>
-                    <span>{tag.title}</span>
-                  </div>
-                ))}
-              </div>
+            {secondaryBtnText && (
+              <a
+                href={secondaryBtnUrl}
+                className="w-full sm:w-auto glass-dark hover:bg-white/10 text-white font-semibold text-base px-8 py-4 rounded-xl border border-white/30 hover:border-white transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <FaBookOpen /> {secondaryBtnText}
+              </a>
             )}
           </div>
-        </section>
-      )}
+
+          {/* Technical Tags Bar */}
+          {technicalTags.length > 0 && (
+            <div className="mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto pt-8 border-t border-white/15 text-xs sm:text-sm font-medium text-slate-300">
+              {technicalTags.map((tag, idx) => (
+                <div key={tag.id || idx} className="flex items-center justify-center gap-2 text-center">
+                  <span className="text-accent text-base shrink-0">
+                    {renderDynamicIcon(tag.icon_class, <FaBuildingColumns />)}
+                  </span>
+                  <span>{tag.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* ============================================================================== */}
-      {/* 2. OVERLAPPING FLOATING STATS CARD */}
+      {/* 2. FLOATING OVERLAPPING STATS CARD (COMPACT HEIGHT, CLEAN TYPOGRAPHY) */}
       {/* ============================================================================== */}
       {landingStats.length > 0 && (
-        <section className="relative z-20 -mt-16 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-2xl shadow-ultra border border-slate-100 p-8 md:p-10">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 text-center">
+        <div className="relative z-20 -translate-y-[30%] max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-2xl shadow-ultra border border-slate-100 py-4 px-6 md:py-5 md:px-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 text-center">
               {landingStats.map((stat, idx) => {
                 const hasTargetNumber =
                   stat.target_number !== null &&
@@ -206,12 +228,12 @@ export default function HomeContent({ content = {} }) {
                 return (
                   <div
                     key={stat.id || idx}
-                    className={`flex flex-col items-center justify-center p-2 ${
-                      idx > 0 ? "pt-6 sm:pt-2" : ""
+                    className={`flex flex-col items-center justify-center p-1 sm:p-1.5 ${
+                      idx > 0 ? "pt-4 sm:pt-1.5" : ""
                     }`}
                   >
                     {/* Number / Value Row */}
-                    <div className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-primary flex items-center justify-center whitespace-nowrap leading-none">
+                    <div className="text-3xl sm:text-4xl md:text-5xl font-display font-extrabold text-primary flex items-center justify-center whitespace-nowrap leading-none gap-0.5">
                       {stat.prefix && <span>{stat.prefix}</span>}
                       {hasTargetNumber ? (
                         <AnimatedCounter targetValue={stat.target_number} />
@@ -226,7 +248,7 @@ export default function HomeContent({ content = {} }) {
                       </span>
                     )}
 
-                    {/* Secondary Description Sub-label */}
+                    {/* Secondary Sub-label */}
                     {stat.sub_label && (
                       <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
                         {stat.sub_label}
@@ -237,14 +259,14 @@ export default function HomeContent({ content = {} }) {
               })}
             </div>
           </div>
-        </section>
+        </div>
       )}
 
       {/* ============================================================================== */}
       {/* 3. ABOUT AIEMS SECTION */}
       {/* ============================================================================== */}
       {(aboutBanner.heading || aboutBannerImage) && (
-        <section id="about" className="py-24 bg-surface scroll-mt-20">
+        <section id="about" className="pt-8 sm:pt-12 pb-24 bg-surface scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               
@@ -362,7 +384,7 @@ export default function HomeContent({ content = {} }) {
       )}
 
       {/* ============================================================================== */}
-      {/* 4. FEATURED PROGRAM SHOWCASE (TOTALLY ISOLATED CMS DRIVEN CARD) */}
+      {/* 4. FEATURED PROGRAM SHOWCASE */}
       {/* ============================================================================== */}
       {programData.heading && (
         <section id="program" className="py-24 bg-white scroll-mt-20 border-t border-slate-100">
@@ -383,7 +405,6 @@ export default function HomeContent({ content = {} }) {
               )}
             </div>
 
-            {/* Render 100% Isolated Homepage Showcase Card(s) if populated */}
             {hasIsolatedCards ? (
               <div className="space-y-12">
                 {isolatedCards.map((card) => {
@@ -402,7 +423,6 @@ export default function HomeContent({ content = {} }) {
                   const prerequisiteTitle = card.prerequisite_title || "Entry Prerequisites (+2 Science)";
                   const prerequisiteOverview = card.prerequisite_overview || (requirementRules.length > 0 ? requirementRules.map(r => r.content).join(" - ") : "");
 
-                  // Target syllabus link redirection
                   const targetSyllabusUrl = card.custom_syllabus_redirect_url || (
                     card.target_program_id ? `/programs/${card.target_program_id}` : "/home"
                   );
@@ -412,7 +432,7 @@ export default function HomeContent({ content = {} }) {
                       key={card.id}
                       className="bg-surface rounded-3xl border border-slate-200 overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-0"
                     >
-                      {/* Left Banner Image & Badges (col-span-5) */}
+                      {/* Left Banner Image & Badges */}
                       <div className="lg:col-span-5 relative min-h-[320px] lg:min-h-full">
                         <img
                           src={bannerImg}
@@ -436,7 +456,7 @@ export default function HomeContent({ content = {} }) {
                         </div>
                       </div>
 
-                      {/* Right Course Details (col-span-7) */}
+                      {/* Right Course Details */}
                       <div className="lg:col-span-7 p-8 sm:p-12 space-y-6 flex flex-col justify-between">
                         <div className="space-y-4">
                           <div className="flex items-center justify-between flex-wrap gap-2">
@@ -458,7 +478,6 @@ export default function HomeContent({ content = {} }) {
                             </p>
                           )}
 
-                          {/* Technical Feature Pills Grid */}
                           {featurePills.length > 0 && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                               {featurePills.map((feat, fIdx) => (
@@ -475,7 +494,6 @@ export default function HomeContent({ content = {} }) {
                             </div>
                           )}
 
-                          {/* Prerequisites Callout Box */}
                           {prerequisiteOverview && (
                             <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 text-xs text-slate-700 space-y-1 mt-4">
                               <strong className="text-primary block font-bold flex items-center gap-1.5">
@@ -516,7 +534,6 @@ export default function HomeContent({ content = {} }) {
                 })}
               </div>
             ) : (
-              /* Fallback to Standard Programs list if isolated showcase card is not yet configured */
               standardProgramItems.length > 0 && (
                 <div className="space-y-12">
                   {standardProgramItems.map((prog) => {
@@ -542,7 +559,6 @@ export default function HomeContent({ content = {} }) {
                         key={prog.id}
                         className="bg-surface rounded-3xl border border-slate-200 overflow-hidden shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-0"
                       >
-                        {/* Left Banner Image & Badges (col-span-5) */}
                         <div className="lg:col-span-5 relative min-h-[320px] lg:min-h-full">
                           <img
                             src={bannerImg}
@@ -566,7 +582,6 @@ export default function HomeContent({ content = {} }) {
                           </div>
                         </div>
 
-                        {/* Right Course Details (col-span-7) */}
                         <div className="lg:col-span-7 p-8 sm:p-12 space-y-6 flex flex-col justify-between">
                           <div className="space-y-4">
                             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -586,7 +601,6 @@ export default function HomeContent({ content = {} }) {
                               </p>
                             )}
 
-                            {/* Technical Feature Pills Grid */}
                             {featurePills.length > 0 && (
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                                 {featurePills.map((feat, fIdx) => (
@@ -603,7 +617,6 @@ export default function HomeContent({ content = {} }) {
                               </div>
                             )}
 
-                            {/* Prerequisites Callout Box */}
                             {prerequisiteOverview && (
                               <div className="p-4 bg-primary/5 rounded-xl border border-primary/20 text-xs text-slate-700 space-y-1 mt-4">
                                 <strong className="text-primary block font-bold flex items-center gap-1.5">
@@ -616,7 +629,6 @@ export default function HomeContent({ content = {} }) {
                             )}
                           </div>
 
-                          {/* Bottom Action Buttons */}
                           <div className="pt-6 border-t border-slate-200 flex flex-col sm:flex-row items-center gap-4">
                             <a
                               href="#admissions"

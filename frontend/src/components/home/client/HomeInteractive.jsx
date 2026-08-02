@@ -12,6 +12,7 @@ import {
   FaCalendarDay
 } from "react-icons/fa6";
 import EligibilityCalculator from "@/components/home/client/EligibilityCalculator";
+import PopupBannerModal from "@/components/home/client/PopupBannerModal";
 import { submitCourseApplication, resolveMediaUrl } from "@/lib/api/home";
 
 /**
@@ -34,6 +35,7 @@ const formatDate = (isoDate) => {
 /**
  * HomeInteractive Component
  * Renders interactive components in exact requested section order:
+ * 0. Dynamic Homepage Popup Banner Modal (Auto-triggers on page mount)
  * 1. Eligibility Calculator (#eligibility-calculator) - Placed directly below Featured Program Showcase
  * 2. Campus Facilities / Tech Labs (#facilities)
  * 3. Online Admissions & Requirements (#admissions)
@@ -47,6 +49,7 @@ export default function HomeInteractive({ content = {} }) {
   const [submitting, setSubmitting] = useState(false);
 
   const eligibilityConfig = content?.eligibility_config || {};
+  const popupBannerData = content?.popup_banner || {};
   const campusFacilitiesData = content?.campus_facilities || {};
   const admissionDetail = content?.admission_detail || {};
   const admissionContact = content?.admission_contact || {};
@@ -92,6 +95,11 @@ export default function HomeInteractive({ content = {} }) {
   return (
     <div className="w-full">
       
+      {/* ============================================================================== */}
+      {/* 0. HOMEPAGE ENTRY ANNOUNCEMENT / GREETING POPUP BANNER MODAL */}
+      {/* ============================================================================== */}
+      <PopupBannerModal popupData={popupBannerData} />
+
       {/* ============================================================================== */}
       {/* 1. INTERACTIVE EVALUATION: BSC. CSIT ELIGIBILITY CALCULATOR */}
       {/* ============================================================================== */}

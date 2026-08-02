@@ -21,6 +21,9 @@ def secure_file_rename(instance, filename, folder_name):
 def top_banner_image_path(instance, filename):
     return secure_file_rename(instance, filename, 'banners')
 
+def popup_banner_image_path(instance, filename):
+    return secure_file_rename(instance, filename, 'popups')
+
 def about_banner_image_path(instance, filename):
     return secure_file_rename(instance, filename, 'about_banners')
 
@@ -364,6 +367,81 @@ class EligibilityStreamOption(models.Model):
 
     def __str__(self):
         return f"{self.name or 'Stream'} ({'Eligible' if self.is_eligible else 'Ineligible'})"
+
+
+class HomepagePopupBanner(SEOMetadataMixin, models.Model):
+    heading = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        default="",
+        verbose_name="Popup Banner Heading / Title"
+    )
+    sub_heading = models.TextField(
+        blank=True,
+        null=True,
+        default="",
+        verbose_name="Sub Heading / Short Description"
+    )
+    image = models.ImageField(
+        upload_to=popup_banner_image_path,
+        validators=[validate_image_file],
+        blank=True,
+        null=True,
+        verbose_name="Popup Image / Flyer Asset (Flexible Size & Aspect Ratio)"
+    )
+    action_url = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True,
+        default="",
+        verbose_name="Click-through CTA URL / Link"
+    )
+    button_text = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        default="Apply Now",
+        verbose_name="CTA Button Label"
+    )
+    show_cta_button = models.BooleanField(
+        default=True,
+        verbose_name="Show Action CTA Button?"
+    )
+    start_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Publish Start Timestamp (Optional)",
+        help_text="If set, popup will only display on or after this timestamp."
+    )
+    end_date = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name="Publish Expiry Timestamp (Optional)",
+        help_text="If set, popup will automatically stop displaying after this timestamp."
+    )
+    display_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Display Priority Order"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Is Active?"
+    )
+    created_at = models.DateTimeField(default=now, verbose_name="Created At")
+
+    class Meta:
+        verbose_name = "Homepage Popup Banner"
+        verbose_name_plural = "Homepage Popup Banners"
+        ordering = ['display_order', '-created_at']
+        indexes = [
+            models.Index(fields=['display_order']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return self.heading or f"Homepage Popup Banner #{self.id}"
 
 # ==============================================================================
 # 2. CORE HOMEPAGE CMS MODELS WITH HERO TAGS, LANDING STATS & ABOUT LAYOUT
@@ -1430,8 +1508,6 @@ class NotificationSetting(models.Model):
         upload_to=email_logo_path,
         blank=True,
         null=True,
-        # MODIFIED: Use the stricter email-specific validator that excludes SVG,
-        # because most email clients cannot render inline SVG reliably.
         validators=[validate_email_image_file],
         verbose_name="Email Template Header Logo",
         help_text="Dedicated raster (JPG/JPEG/PNG/WEBP) logo used at the top of outgoing emails. Recommended size: PNG up to 300px wide. SVG is not allowed because email clients cannot render it inline reliably."

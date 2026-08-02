@@ -6,6 +6,7 @@ from .views import (
     NavbarLinkViewSet,
     AnnouncementTickerItemViewSet,
     EligibilityCalculatorConfigViewSet,
+    HomepagePopupBannerViewSet,
 
     # Core CMS Content Block ViewSets
     TopBannerViewSet,
@@ -60,6 +61,7 @@ router.register(r'site-settings', SiteGlobalSettingsViewSet, basename='site-sett
 router.register(r'navbar-links', NavbarLinkViewSet, basename='navbar-links')
 router.register(r'announcements', AnnouncementTickerItemViewSet, basename='announcements')
 router.register(r'eligibility-config', EligibilityCalculatorConfigViewSet, basename='eligibility-config')
+router.register(r'popup-banners', HomepagePopupBannerViewSet, basename='popup-banners')
 
 # ==============================================================================
 # 2. CORE CMS & CONTENT MANAGEMENT ENDPOINTS

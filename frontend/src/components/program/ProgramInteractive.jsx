@@ -35,10 +35,6 @@ import {
   FaMicrochip,
 } from "react-icons/fa6";
 
-/**
- * Dynamic Icon Resolver
- * Maps FontAwesome icon class strings supplied from Django CMS to React Icons.
- */
 const renderDynamicIcon = (iconClass, fallback = <FaCode />) => {
   if (!iconClass || typeof iconClass !== "string") return fallback;
   const cls = iconClass.toLowerCase().trim();
@@ -72,10 +68,6 @@ const renderDynamicIcon = (iconClass, fallback = <FaCode />) => {
   return fallback;
 };
 
-/**
- * 100% CMS-Driven Interactive Program Detail Component.
- * Zero hardcoded fallback arrays/strings. All UI elements render conditionally.
- */
 export default function ProgramInteractive({ program = {}, siteSettings = {}, contactInfo = {} }) {
   const [openSemesters, setOpenSemesters] = useState({ 0: true });
   const [selectedElectives, setSelectedElectives] = useState({});
@@ -91,14 +83,13 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
     }));
   };
 
-  const handleElectiveChoice = (semesterNum, optionLabel) => {
+  const handleElectiveChoice = (electiveKey, optionValue) => {
     setSelectedElectives((prev) => ({
       ...prev,
-      [semesterNum]: optionLabel,
+      [electiveKey]: optionValue,
     }));
   };
 
-  // Dynamic Content Data
   const bannerImage = program.program_banner?.image || "";
   const summaryMetrics = program.program_summary || [];
   const aboutSection = program.about_programs;
@@ -110,15 +101,12 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
   const careerOutcomesData = program.career_outcomes;
   const careerRoles = careerOutcomesData?.child_outcomes || [];
 
-  // Hotline Contact Details from CMS
   const primaryPhone = contactInfo.contact || siteSettings.primary_phone || "";
   const primaryEmail = contactInfo.mail_id || siteSettings.primary_email || "";
 
   return (
     <div className="w-full">
-      {/* ============================================================================== */}
       {/* 1. HERO BANNER SECTION */}
-      {/* ============================================================================== */}
       <section className="relative min-h-[50vh] flex items-center justify-center bg-secondary overflow-hidden py-20">
         {bannerImage && (
           <div className="absolute inset-0 z-0">
@@ -174,9 +162,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </div>
       </section>
 
-      {/* ============================================================================== */}
       {/* 2. PROGRAM SUMMARY METRICS GRID */}
-      {/* ============================================================================== */}
       {summaryMetrics.length > 0 && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-20">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -206,9 +192,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </div>
       )}
 
-      {/* ============================================================================== */}
-      {/* 3. PROGRAM OVERVIEW & CHARTER BADGE SECTION */}
-      {/* ============================================================================== */}
+      {/* 3. PROGRAM OVERVIEW SECTION */}
       {aboutSection && (aboutSection.title || aboutSection.content) && (
         <section className="py-24 bg-surface scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -311,9 +295,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </section>
       )}
 
-      {/* ============================================================================== */}
-      {/* 4. ENTRANCE ELIGIBILITY CRITERIA SECTION */}
-      {/* ============================================================================== */}
+      {/* 4. ENTRANCE ELIGIBILITY SECTION */}
       {entryReq && (entryReq.title || eligibilityItems.length > 0) && (
         <section id="eligibility" className="py-16 bg-white border-t border-b border-slate-100 scroll-mt-20">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -360,9 +342,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </section>
       )}
 
-      {/* ============================================================================== */}
-      {/* 5. CURRICULUM ACCORDION & ELECTIVES STREAM SECTION */}
-      {/* ============================================================================== */}
+      {/* 5. CURRICULUM ACCORDION & STRUCTURED ELECTIVES STREAM */}
       {curriculumSemesters.length > 0 && (
         <section id="curriculum" className="py-24 bg-surface scroll-mt-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -379,25 +359,20 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
               {curriculumSemesters.map((sem, sIdx) => {
                 const isOpen = !!openSemesters[sIdx];
                 const semesterNum = sem.semester || sIdx + 1;
-
                 const allCourses = Array.isArray(sem.courses) ? sem.courses : [];
-                const coreCourses = sem.has_electives
-                  ? allCourses.filter((c) => !c.is_elective)
-                  : allCourses;
-                const electiveCourses = sem.has_electives
-                  ? allCourses.filter((c) => c.is_elective)
-                  : [];
 
-                const defaultChoice = electiveCourses[0]
-                  ? `${electiveCourses[0].course_name} (${electiveCourses[0].course_code})`
-                  : "";
-                const currentSelectedElective = selectedElectives[semesterNum] || defaultChoice;
+                const coreCourses = allCourses.filter(
+                  (c) => !c.is_elective && (!c.elective_options || c.elective_options.length === 0)
+                );
+                const electiveSubjects = allCourses.filter(
+                  (c) => c.is_elective || (c.elective_options && c.elective_options.length > 0)
+                );
 
                 return (
                   <div
                     key={sem.id || sIdx}
                     className={`bg-white rounded-2xl overflow-hidden shadow-sm transition-all ${
-                      sem.has_electives
+                      electiveSubjects.length > 0
                         ? "border-2 border-primary/40 shadow-md"
                         : "border border-slate-200 hover:border-primary/50"
                     }`}
@@ -405,7 +380,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                     <button
                       onClick={() => toggleAccordion(sIdx)}
                       className={`w-full px-6 py-5 text-left flex justify-between items-center cursor-pointer focus:outline-none transition-colors ${
-                        sem.has_electives
+                        electiveSubjects.length > 0
                           ? "bg-emerald-50/40 hover:bg-emerald-50/80"
                           : "bg-slate-50/80 hover:bg-slate-100/80"
                       }`}
@@ -413,7 +388,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                       <div className="flex items-center gap-3">
                         <span
                           className={`w-8 h-8 rounded-lg font-extrabold text-sm flex items-center justify-center ${
-                            sem.has_electives
+                            electiveSubjects.length > 0
                               ? "bg-primary text-white"
                               : "bg-primary/10 text-primary"
                           }`}
@@ -425,7 +400,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                             <h3 className="text-base sm:text-lg font-bold text-secondary">
                               {sem.title || `Semester ${semesterNum}`}
                             </h3>
-                            {sem.has_electives && (
+                            {electiveSubjects.length > 0 && (
                               <span className="px-2.5 py-0.5 bg-primary text-white font-extrabold text-[10px] uppercase rounded-full tracking-wide">
                                 Elective Stream Offered
                               </span>
@@ -453,11 +428,11 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                           transition={{ duration: 0.25, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <div className="p-6 border-t border-slate-100">
+                          <div className="p-6 border-t border-slate-100 space-y-6">
                             {/* Core Courses Table */}
                             {coreCourses.length > 0 && (
-                              <div className="mb-6">
-                                {sem.has_electives && (
+                              <div>
+                                {electiveSubjects.length > 0 && (
                                   <h4 className="font-bold text-secondary text-xs uppercase tracking-wider mb-3">
                                     Core Mandatory Courses ({coreCourses.length})
                                   </h4>
@@ -469,7 +444,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                                         <th className="py-3 px-4">Course Name</th>
                                         <th className="py-3 px-4">Course Code</th>
                                         <th className="py-3 px-4">Credit Hours</th>
-                                        {!sem.has_electives && <th className="py-3 px-4">Course Type</th>}
+                                        <th className="py-3 px-4">Course Type</th>
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
@@ -481,14 +456,14 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                                           <td className="py-3 px-4 font-mono text-slate-500">
                                             {c.course_code}
                                           </td>
-                                          <td className="py-3 px-4">{c.credit_hours} Hrs</td>
-                                          {!sem.has_electives && (
-                                            <td className="py-3 px-4">
-                                              <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-semibold text-[11px]">
-                                                {c.course_type || "Core"}
-                                              </span>
-                                            </td>
-                                          )}
+                                          <td className="py-3 px-4">
+                                            {c.credit_hours ? `${c.credit_hours} Hrs` : "-"}
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded font-semibold text-[11px]">
+                                              {c.course_type || "Core"}
+                                            </span>
+                                          </td>
                                         </tr>
                                       ))}
                                     </tbody>
@@ -497,71 +472,98 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
                               </div>
                             )}
 
-                            {/* Elective Selection Stream */}
-                            {sem.has_electives && electiveCourses.length > 0 && (
-                              <div className="p-5 bg-gradient-to-r from-secondary/5 via-white to-primary/5 rounded-2xl border border-primary/30 space-y-4">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
-                                  <div>
-                                    <h4 className="font-display font-extrabold text-secondary text-sm flex items-center gap-2">
-                                      <FaSquareCheck className="text-primary" />{" "}
-                                      {sem.elective_stream_title || "Select Elective Stream"}
-                                    </h4>
-                                  </div>
-                                  {currentSelectedElective && (
-                                    <span className="text-xs font-bold text-primary bg-white px-3.5 py-1.5 rounded-full border border-primary/30 shadow-sm self-start sm:self-auto">
-                                      Active Selection: {currentSelectedElective}
-                                    </span>
-                                  )}
-                                </div>
+                            {/* Elective Subjects Block */}
+                            {electiveSubjects.length > 0 && (
+                              <div className="space-y-6">
+                                {electiveSubjects.map((eleSub, eleIdx) => {
+                                  const options = eleSub.elective_options || [];
+                                  const electiveKey = `sem_${semesterNum}_subject_${eleSub.id || eleIdx}`;
+                                  
+                                  const defaultSelection = options.length > 0
+                                    ? `${options[0].course_name} (${options[0].course_code})`
+                                    : "";
+                                  const activeChoice = selectedElectives[electiveKey] || defaultSelection;
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                  {electiveCourses.map((ele, eIdx) => {
-                                    const optionLabel = `${ele.course_name} (${ele.course_code})`;
-                                    const isChecked =
-                                      currentSelectedElective.includes(ele.course_code) ||
-                                      currentSelectedElective === optionLabel;
-
-                                    return (
-                                      <label
-                                        key={ele.id || eIdx}
-                                        className={`p-4 bg-white rounded-xl border hover:border-primary cursor-pointer flex items-start gap-3.5 transition-all shadow-sm group ${
-                                          isChecked
-                                            ? "border-primary ring-1 ring-primary/30"
-                                            : "border-slate-200"
-                                        }`}
-                                      >
-                                        <input
-                                          type="radio"
-                                          name={`elective_sem_${semesterNum}`}
-                                          value={ele.course_code}
-                                          checked={isChecked}
-                                          onChange={() =>
-                                            handleElectiveChoice(semesterNum, optionLabel)
-                                          }
-                                          className="mt-1 accent-primary scale-125 cursor-pointer"
-                                        />
+                                  return (
+                                    <div
+                                      key={eleSub.id || eleIdx}
+                                      className="p-5 bg-gradient-to-r from-secondary/5 via-white to-primary/5 rounded-2xl border border-primary/30 space-y-4"
+                                    >
+                                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-3">
                                         <div>
-                                          <div className="flex items-center gap-2">
-                                            <strong className="text-xs sm:text-sm text-secondary block font-bold group-hover:text-primary transition-colors">
-                                              {ele.course_name}
-                                            </strong>
-                                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-mono text-[10px] rounded font-bold">
-                                              {ele.course_code}
-                                            </span>
-                                          </div>
-                                          <span className="text-[11px] text-primary font-semibold block mt-0.5">
-                                            <FaAward className="inline mr-1" /> {ele.credit_hours} Credit Hours
-                                          </span>
-                                          {ele.description && (
-                                            <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
-                                              {ele.description}
-                                            </p>
-                                          )}
+                                          <h4 className="font-display font-extrabold text-secondary text-sm flex items-center gap-2">
+                                            <FaSquareCheck className="text-primary" />
+                                            {eleSub.course_name} ({eleSub.course_code})
+                                          </h4>
+                                          <p className="text-xs text-slate-500 mt-0.5">
+                                            Select 1 Elective Option {eleSub.credit_hours ? `(${eleSub.credit_hours} Credit Hours)` : ""}
+                                          </p>
                                         </div>
-                                      </label>
-                                    );
-                                  })}
-                                </div>
+                                        {activeChoice && (
+                                          <span className="text-xs font-bold text-primary bg-white px-3.5 py-1.5 rounded-full border border-primary/30 shadow-sm self-start sm:self-auto">
+                                            Active Selection: {activeChoice}
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Render Structured Elective Options One by One */}
+                                      {options.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          {options.map((opt, optIdx) => {
+                                            const optionValue = `${opt.course_name} (${opt.course_code})`;
+                                            const isChecked = activeChoice === optionValue;
+
+                                            return (
+                                              <label
+                                                key={opt.id || optIdx}
+                                                className={`p-4 bg-white rounded-xl border hover:border-primary cursor-pointer flex items-start gap-3.5 transition-all shadow-sm group ${
+                                                  isChecked
+                                                    ? "border-primary ring-1 ring-primary/30"
+                                                    : "border-slate-200"
+                                                }`}
+                                              >
+                                                <input
+                                                  type="radio"
+                                                  name={electiveKey}
+                                                  value={opt.course_code}
+                                                  checked={isChecked}
+                                                  onChange={() =>
+                                                    handleElectiveChoice(electiveKey, optionValue)
+                                                  }
+                                                  className="mt-1 accent-primary scale-125 cursor-pointer"
+                                                />
+                                                <div className="w-full">
+                                                  <div className="flex items-center justify-between gap-2">
+                                                    <strong className="text-xs sm:text-sm text-secondary block font-bold group-hover:text-primary transition-colors">
+                                                      {opt.course_name}
+                                                    </strong>
+                                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 font-mono text-[10px] rounded font-bold shrink-0">
+                                                      {opt.course_code}
+                                                    </span>
+                                                  </div>
+                                                  {opt.credit_hours && (
+                                                    <span className="text-[11px] text-primary font-semibold block mt-0.5">
+                                                      <FaAward className="inline mr-1" /> {opt.credit_hours} Credit Hours
+                                                    </span>
+                                                  )}
+                                                  {opt.description && (
+                                                    <p className="text-[11px] text-slate-600 mt-1.5 leading-relaxed">
+                                                      {opt.description}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </label>
+                                            );
+                                          })}
+                                        </div>
+                                      ) : eleSub.description ? (
+                                        <p className="text-xs text-slate-600 leading-relaxed bg-white p-3.5 rounded-xl border border-slate-200">
+                                          {eleSub.description}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
@@ -576,9 +578,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </section>
       )}
 
-      {/* ============================================================================== */}
       {/* 6. PARTNERED INDUSTRY CERTIFICATIONS */}
-      {/* ============================================================================== */}
       {industryCerts.length > 0 && (
         <section className="py-20 bg-white border-t border-b border-slate-200/80">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -637,9 +637,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </section>
       )}
 
-      {/* ============================================================================== */}
       {/* 7. CAREER OUTCOMES SECTION */}
-      {/* ============================================================================== */}
       {careerOutcomesData && (careerOutcomesData.title || careerRoles.length > 0) && (
         <section className="bg-secondary text-white py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-5xl mx-auto text-center space-y-8">
@@ -685,9 +683,7 @@ export default function ProgramInteractive({ program = {}, siteSettings = {}, co
         </section>
       )}
 
-      {/* ============================================================================== */}
       {/* 8. CALL TO ACTION (CTA) SECTION */}
-      {/* ============================================================================== */}
       <section id="apply" className="py-16 bg-secondary text-white relative overflow-hidden my-12 max-w-7xl mx-auto rounded-3xl shadow-ultra">
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-6">
           <h2 className="font-display font-extrabold text-3xl sm:text-4xl tracking-tight">

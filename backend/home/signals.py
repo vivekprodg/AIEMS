@@ -9,7 +9,7 @@ from decouple import config
 
 from home.models import (
     SiteGlobalSettings, NavbarLink, AnnouncementTickerItem, EligibilityCalculatorConfig,
-    EligibilityStreamOption, TopBanner as HomeTopBanner, HeroTechnicalTag, LandingStat,
+    EligibilityStreamOption, HomepagePopupBanner, TopBanner as HomeTopBanner, HeroTechnicalTag, LandingStat,
     AboutBannerTitle, AboutBanner, ProgramTitle, Program,
     IsolatedHomeShowcaseCard, IsolatedHomeShowcaseSummaryPoint, IsolatedHomeShowcaseFeature, IsolatedHomeShowcaseRequirementRule,
     CampusTitle as HomeCampusTitle, CampusFacility, NewsTitle, NewsEvent, AdmissionContactDetail,
@@ -37,6 +37,7 @@ MODEL_REVALIDATION_MAP = {
     AnnouncementTickerItem: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs'],
     EligibilityCalculatorConfig: ['/', '/home'],
     EligibilityStreamOption: ['/', '/home'],
+    HomepagePopupBanner: ['/', '/home'],
     NotificationSetting: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs'],
 
     # --- HOME APP CMS MODELS & ISOLATED SHOWCASE ---
