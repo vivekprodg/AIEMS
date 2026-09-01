@@ -24,6 +24,17 @@ from about.models import (
     CampusTitle as AboutCampusTitle, CampusOverview, VisionResearchTitle, VisionResearchBanner,
     LearnMoreContact
 )
+from training.models import (
+    TrainingPageBanner,
+    TrainingCurriculumModule,
+    TrainingTimeSlot,
+    TrainingSidebarPerk,
+    TrainingStreamOption,
+    TrainingTimeframeOption,
+    TrainingDeliveryMode,
+    TrainingExperienceLevel,
+    TrainingApplicationLead
+)
 
 logger = logging.getLogger('django')
 
@@ -32,13 +43,13 @@ logger = logging.getLogger('django')
 # ==============================================================================
 MODEL_REVALIDATION_MAP = {
     # --- GLOBAL SITE CONFIG, NAVBAR, TICKERS & NOTIFICATIONS ---
-    SiteGlobalSettings: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs'],
-    NavbarLink: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs'],
-    AnnouncementTickerItem: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs'],
+    SiteGlobalSettings: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs', '/it-training'],
+    NavbarLink: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs', '/it-training'],
+    AnnouncementTickerItem: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs', '/it-training'],
     EligibilityCalculatorConfig: ['/', '/home'],
     EligibilityStreamOption: ['/', '/home'],
     HomepagePopupBanner: ['/', '/home'],
-    NotificationSetting: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs'],
+    NotificationSetting: ['/', '/home', '/about-us', '/apply-now', '/contact-us', '/faqs', '/it-training'],
 
     # --- HOME APP CMS MODELS & ISOLATED SHOWCASE ---
     HomeTopBanner: ['/', '/home'],
@@ -65,8 +76,8 @@ MODEL_REVALIDATION_MAP = {
     ApplyJobDetail: ['/'],
     ApplyForCourseBanner: ['/apply-now'],
     ApplyForPositionBanner: ['/apply-for-job'],
-    FooterConfig: ['/', '/home', '/about-us', '/contact-us', '/faqs'],
-    FooterLink: ['/', '/home', '/about-us', '/contact-us', '/faqs'],
+    FooterConfig: ['/', '/home', '/about-us', '/contact-us', '/faqs', '/it-training'],
+    FooterLink: ['/', '/home', '/about-us', '/contact-us', '/faqs', '/it-training'],
     FAQCategory: ['/faqs'],
     FAQItem: ['/faqs'],
     DynamicPageContent: ['/privacy-policy', '/terms-and-conditions'],
@@ -90,6 +101,16 @@ MODEL_REVALIDATION_MAP = {
     VisionResearchTitle: ['/about-us'],
     VisionResearchBanner: ['/about-us'],
     LearnMoreContact: ['/about-us'],
+
+    # --- TRAINING APP CMS MODELS ---
+    TrainingPageBanner: ['/it-training'],
+    TrainingCurriculumModule: ['/it-training'],
+    TrainingTimeSlot: ['/it-training'],
+    TrainingSidebarPerk: ['/it-training'],
+    TrainingStreamOption: ['/it-training'],
+    TrainingTimeframeOption: ['/it-training'],
+    TrainingDeliveryMode: ['/it-training'],
+    TrainingExperienceLevel: ['/it-training'],
 }
 
 # ==============================================================================
@@ -99,7 +120,11 @@ def invalidate_cms_cache(app_label=None):
     """
     Clears backend payload cache keys for immediate frontend synchronization.
     """
-    keys_to_clear = ['aiems_home_content_payload', 'aiems_about_content_payload']
+    keys_to_clear = [
+        'aiems_home_content_payload',
+        'aiems_about_content_payload',
+        'aiems_training_content_payload'
+    ]
 
     for cache_key in keys_to_clear:
         try:
@@ -109,7 +134,6 @@ def invalidate_cms_cache(app_label=None):
                 logger.debug(f"Cache key '{cache_key}' was empty or not found during invalidation.")
         except Exception as e:
             logger.error(f"Failed to clear cache key '{cache_key}': {str(e)}")
-
 
 def fire_revalidation_webhook(paths, model_name=None):
     """

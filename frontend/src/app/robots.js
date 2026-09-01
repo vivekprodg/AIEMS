@@ -33,6 +33,7 @@ export default function robots() {
           '/',
           '/home',
           '/about-us',
+          '/it-training',
           '/apply-now',
           '/contact-us',
           '/programs/',

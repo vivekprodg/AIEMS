@@ -51,6 +51,12 @@ export default async function sitemap() {
       priority: 0.9,
     },
     {
+      url: `${SITE_URL}/it-training`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.85,
+    },
+    {
       url: `${SITE_URL}/apply-now`,
       lastModified: new Date(),
       changeFrequency: "weekly",
